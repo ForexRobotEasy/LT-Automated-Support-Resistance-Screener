@@ -1,0 +1,104 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                                     LT Automated Support Resistance Screener |
+//|                                                         forexroboteasy.com |
+//|                                                       Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+//|                                                SupportResistance.mq5 |
+//|                                      Copyright 2022, Forex Robot Easy Team |
+//|                                             https://www.forexroboteasy.com |
+//+------------------------------------------------------------------+
+//| Terms of Reference for Writing Code for Product LT Automated Support Resistance Screener |
+//| 1. Develop a support resistance indicator for the Forex Market using the MQL4 programming language. |
+//| 2. Ensure compatibility with the Metatrader 4 platform. |
+//| 3. Provide comprehensive analysis of the Forex Market. |
+//| 4. Offer efficient support and resistance values for traders. |
+//| 5. Implement level indicator functionality to ascertain support and resistance values. |
+//| 6. Allow for wide application across markets such as indices and gold. |
+//| 7. Support adaptable time frames for versatile trading. |
+//| 8. Develop necessary trading functions for the indicator. |
+//| 9. Limit the size of the terms of reference to 1500-2000 characters. |
+//+------------------------------------------------------------------+
+
+#property copyright 'Copyright 2022, Forex Robot Easy Team'
+#property link      'https://www.forexroboteasy.com'
+
+#property indicator_chart_window
+#property indicator_buffers 2
+#property indicator_color1 Green
+#property indicator_color2 Red
+
+input int period = PERIOD_H1;  // Timeframe
+input int lookbackBars = 100;  // Number of bars to look back for support and resistance levels
+
+double supportLevelBuffer[];
+double resistanceLevelBuffer[];
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   IndicatorBuffers(2);
+   
+   SetIndexStyle(0, DRAW_LINE);
+   SetIndexBuffer(0, supportLevelBuffer);
+   SetIndexLabel(0, 'Support');
+   
+   SetIndexStyle(1, DRAW_LINE);
+   SetIndexBuffer(1, resistanceLevelBuffer);
+   SetIndexLabel(1, 'Resistance');
+   
+   return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime& time[],
+                const double& open[],
+                const double& high[],
+                const double& low[],
+                const double& close[],
+                const long& tick_volume[],
+                const long& volume[],
+                const int& spread[])
+{
+   int startBar = MathMax(prev_calculated - lookbackBars, 0);
+   
+   ArraySetAsSeries(supportLevelBuffer, true);
+   ArraySetAsSeries(resistanceLevelBuffer, true);
+   
+   double prevLow = low[startBar];
+   double prevHigh = high[startBar];
+   
+   for (int i = startBar; i < rates_total; i++)
+   {
+      double currentLow = low[i];
+      double currentHigh = high[i];
+      
+      if (currentLow < prevLow)
+      {
+         supportLevelBuffer[i] = prevLow;
+         prevLow = currentLow;
+      }
+      else
+      {
+         supportLevelBuffer[i] = supportLevelBuffer[i - 1];
+      }
+      
+      if (currentHigh > prevHigh)
+      {
+         resistanceLevelBuffer[i] = prevHigh;
+         prevHigh = currentHigh;
+      }
+      else
+      {
+         resistanceLevelBuffer[i] = resistanceLevelBuffer[i - 1];
+      }
+   }
+   
+   return(rates_total);
+}
